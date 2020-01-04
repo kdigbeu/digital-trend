@@ -1,0 +1,153 @@
+# Default values for digital-trend.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+image:
+  pullPolicy: Always
+  tag: latest
+
+init:
+  timeouts:
+    db: 600
+
+fullnameOverride: obelisk
+
+service:
+  type: ClusterIP
+
+waitForSidecar: true
+
+annotations:
+  status.sidecar.istio.io/port: "0"
+
+destinationRule:
+  enabled: false
+  mode: DISABLE
+
+taps:
+  - arxiv
+  - thoughtworks
+  - meetup
+  - github
+
+pgHost: obelisk
+pgPort: 5432
+pgDatabase: postgres
+pgUser: postgres
+pgPass: postgres
+pgSchema: taps
+
+github:
+  name: github
+  enabled: false
+  image:
+    repository: digital-trend/github
+    tag: latest
+  port: 5432
+  replicaCount: 1
+  resources: {}
+  restartPolicy: Always
+  nodeEnv: development
+  schedule: "0 0 1 * *"
+  githubSourceRepo: https://api.github.com/search/repositories?q={query}
+  githubSourceCode: https://api.github.com/search/code?q={query}
+  githubRateLimit: 10
+  githubKeywords: statcan,statscan
+
+meetup:
+  name: meetup
+  enabled: false
+  image:
+    repository: digital-trend/meetup
+    tag: latest
+  port: 5432
+  replicaCount: 1
+  resources: {}
+  restartPolicy: Always
+  nodeEnv: development
+  schedule: "0 0 1 1 *"
+  meetupClientId: change_me
+  meetupClientSecret: change_me
+  meetupCode: change_me
+  meetupTopics: innovation
+  meetupCities: ottawa
+  meetupKeywords: NA
+  meetupRedirectUrl: https://obelisk.innovation.cloud.statcan.ca:2000
+  meetupRateLimit: 10
+
+thoughtworks:
+  name: thoughtworks
+  enabled: false
+  image:
+    repository: digital-trend/thoughtworks
+    tag: latest
+  port: 5432
+  replicaCount: 1
+  resources: {}
+  restartPolicy: Always
+  nodeEnv: development
+  schedule: "0 0 1 * *"
+  thoughtworksSource: https://www.thoughtworks.com/radar/a-z
+
+arxiv:
+  name: arxiv
+  enabled: false
+  image:
+    repository: digital-trend/arxiv
+    tag: latest
+  port: 5432
+  replicaCount: 1
+  resources: {}
+  restartPolicy: Always
+  nodeEnv: development
+  schedule: "0 0 1 * *"
+  arxivSource: 'https://export.arxiv.org/rss/cs'
+  arxivRateLimit: 10
+
+postgresDb:
+  name: postgres-db
+  image:
+    repository: digital-trend/postgres-db
+    tag: latest
+  ports:
+    dbPort: 5432
+    postgrestPort: 3000
+  replicaCount: 1
+  restartPolicy: Always
+  mount: /var/lib/postgresql/data
+  subPath: data
+
+ingress:
+  enabled: true
+  annotations: {}
+  hosts:
+  #  - localhost
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+volumeClaim:
+  accessModes:
+    - ReadWriteOnce
+  size: 2Gi
+  storageClass: default
+
+smtp:
+  enabled: false
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi
+nodeSelector: {}
+tolerations: []
+
+global:
+  imagePullSecrets:
+    - change_me

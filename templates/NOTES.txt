@@ -1,0 +1,6 @@
+{{- $fullName := include "digital-trend.fullname" . -}}
+1. Get the application URL by running these commands:
+{{- if .Values.ingress.enabled }}
+  1. http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $fullName }}.innovation.cloud.statcan.ca[{{- range .Values.taps }}/{{ . }}{{- end }}]
+  2. Use http://postgrest.org/en/v6.0/api.html to fulfill requests for REST data
+{{- end }}

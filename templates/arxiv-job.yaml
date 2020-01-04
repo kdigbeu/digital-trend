@@ -1,0 +1,64 @@
+{{- if .Values.arxiv.enabled -}}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ .Values.arxiv.name }}
+  labels:
+    app.kubernetes.io/name: {{ include "digital-trend.name" . }}
+    helm.sh/chart: {{ include "digital-trend.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    component: arxiv
+spec:
+  schedule: {{ .Values.arxiv.schedule | quote }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "digital-trend.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      component: arxiv
+  metadata:
+    labels:
+      app: {{ include "digital-trend.name" . }}
+      release: {{ .Release.Name }}
+      version: {{ .Release.Name }}
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: {{ include "digital-trend.name" . }}
+            release: {{ .Release.Name }}
+            version: {{ .Release.Name }}
+            component: arxiv
+        spec:
+          containers:
+          - name: {{ .Chart.Name }}-{{ .Values.arxiv.name }}
+            image: "{{ .Values.arxiv.image.repository }}:{{ default .Values.image.tag .Values.arxiv.image.tag }}"
+            imagePullPolicy: {{ .Values.image.pullPolicy }}
+            env:
+              - name: PGHOST
+                value: {{ .Values.pgHost | quote }}
+              - name: PGPORT
+                value: !!string {{ .Values.pgPort }}
+              - name: PGDATABASE
+                value: {{ .Values.pgDatabase | quote }}
+              - name: PGUSER
+                value: {{ .Values.pgUser | quote }}
+              - name: PGPASS
+                value: {{ .Values.pgPass | quote }}
+              - name: PGSCHEMA
+                value: {{ .Values.pgSchema | quote }}
+              {{- if .Values.arxiv.arxivSource }}
+              - name: ARXIV_SOURCE
+                value: {{ .Values.arxiv.arxivSource | quote }}
+              {{- end }}
+              {{- if .Values.arxiv.arxivRateLimit }}
+              - name: ARXIV_RATE_LIMIT
+                value: !!string {{ .Values.arxiv.arxivRateLimit }}
+              {{- end }}
+            ports:
+            - name: "arxiv-port"
+              containerPort: 80
+          restartPolicy: OnFailure
+{{- include "digital-trend.imagePullSecrets" . | indent 10 }}
+{{- end }}

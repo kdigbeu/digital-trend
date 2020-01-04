@@ -1,0 +1,21 @@
+{{- if .Values.destinationRule.enabled }}
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: {{ template "digital-trend.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "digital-trend.name" . }}
+    helm.sh/chart: {{ include "digital-trend.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app: {{ template "digital-trend.name" . }}
+    chart: {{ template "digital-trend.chart" . }}
+    release: {{ .Release.Name }}
+    version: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  host: "{{ template "digital-trend.fullname" . }}.{{ .Release.Namespace }}.svc.{{ default "cluster.local" .Values.clusterDomain }}"
+  trafficPolicy:
+    tls:
+      mode: "{{ default "DISABLE" .Values.destinationRule.mode }}"
+{{- end }}

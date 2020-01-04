@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "digital-trend.fullname" . }}-meetup
+  labels:
+    app.kubernetes.io/name: {{ include "digital-trend.name" . }}
+    helm.sh/chart: {{ include "digital-trend.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app: {{ include "digital-trend.name" . }}
+    version: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: 80
+      targetPort: {{ .Values.meetup.port }}
+      protocol: TCP
+      name: "meetup"
+  selector:
+    app: {{ include "digital-trend.name" . }}
+    version: {{ .Release.Name }}
+    component: meetup

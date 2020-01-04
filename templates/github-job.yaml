@@ -1,0 +1,72 @@
+{{- if .Values.github.enabled -}}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ .Values.github.name }}
+  labels:
+    app.kubernetes.io/name: {{ include "digital-trend.name" . }}
+    helm.sh/chart: {{ include "digital-trend.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    component: github
+spec:
+  schedule: {{ .Values.github.schedule | quote }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "digital-trend.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      component: github
+  metadata:
+    labels:
+      app: {{ include "digital-trend.name" . }}
+      release: {{ .Release.Name }}
+      version: {{ .Release.Name }}
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: {{ include "digital-trend.name" . }}
+            release: {{ .Release.Name }}
+            version: {{ .Release.Name }}
+            component: github
+        spec:
+          containers:
+          - name: {{ .Chart.Name }}-{{ .Values.github.name }}
+            image: "{{ .Values.github.image.repository }}:{{ default .Values.image.tag .Values.github.image.tag }}"
+            imagePullPolicy: {{ .Values.image.pullPolicy }}
+            env:
+              - name: PGHOST
+                value: {{ .Values.pgHost | quote }}
+              - name: PGPORT
+                value: !!string {{ .Values.pgPort }}
+              - name: PGDATABASE
+                value: {{ .Values.pgDatabase | quote }}
+              - name: PGUSER
+                value: {{ .Values.pgUser | quote }}
+              - name: PGPASS
+                value: {{ .Values.pgPass | quote }}
+              - name: PGSCHEMA
+                value: {{ .Values.pgSchema | quote }}
+              {{- if .Values.github.githubKeywords }}
+              - name: GITHUB_KEYWORDS
+                value: {{ .Values.github.githubKeywords | quote }}
+              {{- end }}
+              {{- if .Values.github.githubSourceRepo }}
+              - name: GITHUB_SOURCE_REPOSITORY
+                value: {{ .Values.github.githubSourceRepo | quote }}
+              {{- end }}
+              {{- if .Values.github.githubSourceCode }}
+              - name: GITHUB_SOURCE_CODE
+                value: {{ .Values.github.githubSourceCode | quote }}
+              {{- end }}
+              {{- if .Values.github.githubRateLimit }}
+              - name: GITHUB_RATE_LIMIT
+                value: !!string {{ .Values.github.githubRateLimit }}
+              {{- end }}
+            ports:
+            - name: "github-port"
+              containerPort: 80
+          restartPolicy: OnFailure
+{{- include "digital-trend.imagePullSecrets" . | indent 10 }}
+{{- end }}

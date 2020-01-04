@@ -1,0 +1,64 @@
+{{- if .Values.thoughtworks.enabled -}}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ .Values.thoughtworks.name }}
+  labels:
+    app.kubernetes.io/name: {{ include "digital-trend.name" . }}
+    helm.sh/chart: {{ include "digital-trend.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    component: thoughtworks
+spec:
+  schedule: {{ .Values.thoughtworks.schedule | quote }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "digital-trend.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      component: thoughtworks
+  metadata:
+    labels:
+      app: {{ include "digital-trend.name" . }}
+      release: {{ .Release.Name }}
+      version: {{ .Release.Name }}
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: {{ include "digital-trend.name" . }}
+            release: {{ .Release.Name }}
+            version: {{ .Release.Name }}
+            component: thoughtworks
+        spec:
+          containers:
+          - name: {{ .Chart.Name }}-{{ .Values.thoughtworks.name }}
+            image: "{{ .Values.thoughtworks.image.repository }}:{{ default .Values.image.tag .Values.thoughtworks.image.tag }}"
+            imagePullPolicy: {{ .Values.image.pullPolicy }}
+            env:
+              - name: PGHOST
+                value: {{ .Values.pgHost | quote }}
+              - name: PGPORT
+                value: !!string {{ .Values.pgPort }}
+              - name: PGDATABASE
+                value: {{ .Values.pgDatabase | quote }}
+              - name: PGUSER
+                value: {{ .Values.pgUser | quote }}
+              - name: PGPASS
+                value: {{ .Values.pgPass | quote }}
+              - name: PGSCHEMA
+                value: {{ .Values.pgSchema | quote }}
+              {{- if .Values.thoughtworks.thoughtworksSource }}
+              - name: THOUGHTWORKS_SOURCE
+                value: {{ .Values.thoughtworks.thoughtworksSource | quote }}
+              {{- end }}
+              {{- if .Values.thoughtworks.thoughtworksRateLimit }}
+              - name: THOUGHTWORKS_RATE_LIMIT
+                value: !!string {{ .Values.thoughtworks.thoughtworksRateLimit }}
+              {{- end }}
+            ports:
+            - name: "db"
+              containerPort: 80
+          restartPolicy: OnFailure
+{{- include "digital-trend.imagePullSecrets" . | indent 10 }}
+{{- end }}
